@@ -107,6 +107,15 @@ class autossh::install {
 
     /Debian/: {
       package{ $autossh_package: ensure => installed }
+      file{'autossh-tunnel.sh':
+        ensure  => 'present',
+        path    => '/etc/autossh/autossh-tunnel.sh',
+        mode    => '0750',
+        owner   => 'root',
+        group   => 'root',
+        content => template('autossh/autossh.init.systemd.erb'),
+        replace => yes,
+      }
     } # Debian
     
     default: {
