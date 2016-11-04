@@ -1,0 +1,15 @@
+# autossh tunnel '<%= @tun_name %>' tunnel
+
+description "autossh tunnel '<%= @tun_name %>' tunnel"
+
+setuid <%= @user %>
+
+respawn
+
+start on (started networking)
+
+stop on runlevel [016]
+
+env AUTOSSH_GATETIME=0
+
+exec /usr/bin/autossh <%= @tunnel_args %> <%= @bind %>:<%= @port %>:<%= @forward_host %>:<%= @hostport %> -p <%= @remote_ssh_port %> <%= @remote_ssh_user %>@<%= @remote_ssh_host %>

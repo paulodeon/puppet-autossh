@@ -77,10 +77,6 @@ define autossh::tunnel(
   $ssh_tcpkeepalives = $autossh::params::ssh_tcpkeepalives,
 ){
   $tun_name     = $title
-  $tunnel_args  = $tunnel_type ? {
-    'reverse' => "-M ${monitor_port} -f -N -R",
-    'forward' => "-M ${monitor_port} -f -N -L"
-  }
 
   file{"autossh-${tun_name}_conf":
     ensure  => 'present',
@@ -97,6 +93,10 @@ define autossh::tunnel(
   #
   case $::osfamily {
     /RedHat/: {
+      $tunnel_args  = $tunnel_type ? {
+        'reverse' => "-M ${monitor_port} -f -N -R",
+        'forward' => "-M ${monitor_port} -f -N -L"
+      }
       case $::operatingsystemmajrelease {
         /5|6/: {
           file{"autossh-${tun_name}-init":
@@ -126,6 +126,22 @@ define autossh::tunnel(
         }
       }
     } # case Redhat
+
+    /Debian/: {
+      $tunnel_args  = $tunnel_type ? {
+        'reverse' => "-M ${monitor_port} -N -R",
+        'forward' => "-M ${monitor_port} -N -L"
+      }
+      file{ "autossh-${tun_name}-upstart":
+        ensure  => 'present',
+        path    => "/etc/init/autossh-${tun_name}.conf",
+        mode    => '0644',
+        owner   => 'root',
+        group   => 'root',
+        content => template('autossh/autossh.init.upstart.erb'),
+        notify  => Service["autossh-${tun_name}"],
+      }
+    }
 
     default: {
     } # default
