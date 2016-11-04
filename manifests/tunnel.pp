@@ -153,11 +153,16 @@ define autossh::tunnel(
     require => Package['autossh']
   }
 
+  $endpoint_port = $tunnel_type ? {
+    'reverse' => $port,
+    'forward' => $hostport
+  }
+
   ## Define remote endpoints
   @@autossh::tunnel_endpoint {
     "tunnel-enpoint-${remote_ssh_host}-${port}":
     user         => $user,
-    port         => $hostport,
+    port         => $endpoint_port,
     monitor_port => $monitor_port,
     host         => $remote_ssh_host,
     pubkey       => $pubkey,
