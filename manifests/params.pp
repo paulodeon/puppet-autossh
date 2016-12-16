@@ -1,7 +1,7 @@
 # == Class: autossh::params
 #
 # This class defines the default values used in the autossh class.
-# 
+#
 # === Parameters
 #
 # === Variables
@@ -18,9 +18,9 @@
 # $forward_host: default host to forward requests to
 # $bind: the local address to bind to
 # $monitor_port: 0 default monitoring port number for autossh
-# $ssh_reuse_established_connections: default enable reuse of already 
+# $ssh_reuse_established_connections: default enable reuse of already
 #              established ssh connections, if any.  Requires ssh > 5.5.
-# $ssh_compression: enable/disable ssh compression 
+# $ssh_compression: enable/disable ssh compression
 # $ssh_ciphers: cipher selection ordering.  (fastest -> slowest)
 # $ssh_stricthostkeychecking: enable/disable strict host key checking
 # $ssh_tcpkeepalives: enable/disable tcp keepalives
@@ -51,12 +51,15 @@ class autossh::params {
   $forward_host     = 'localhost'
   $monitor_port     = '0'
   $ssh_reuse_established_connections = false  ## Requires openssh > v5.5
-  $ssh_enable_compression = false ## Not really useful for local connections 
+  $ssh_enable_compression = false ## Not really useful for local connections
   $ssh_ciphers =
     'blowfish-cbc,aes128-cbc,3des-cbc,cast128-cbc,arcfour,aes192-cbc,aes256-cbc,aes128-ctr,aes192-ctr,aes256-ctr'
   $ssh_stricthostkeychecking = false
   $ssh_tcpkeepalives = true
 
+  $tunnels = {}
+  $endpoints = {}
+  $tunnel_endpoints = {}
 
   case $::osfamily {
     /RedHat/: {
@@ -74,7 +77,7 @@ class autossh::params {
         default: {
           fail("Error - Unsupported OS Version: ${::operatingsystemrelease}")
         }
-      } # $::operatingsystemmajrelease  
+      } # $::operatingsystemmajrelease
     } # RedHat
 
     /Debian/: {
