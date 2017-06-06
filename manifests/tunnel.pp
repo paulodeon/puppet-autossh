@@ -78,12 +78,6 @@ define autossh::tunnel(
 ){
   $tun_name     = $title
 
-  service{"autossh-${tun_name}":
-    ensure  =>  $enable,
-    enable  =>  $enable,
-    require => Package['autossh']
-  }
-
   #
   # User sysV or systemd init depending on the OS
   #
@@ -102,7 +96,6 @@ define autossh::tunnel(
             owner   => 'root',
             group   => 'root',
             content => template('autossh/autossh.init.sysv.erb'),
-            notify  => Service["autossh-${tun_name}"],
           }
         } # case rhel 5|6
 
@@ -114,7 +107,6 @@ define autossh::tunnel(
             owner   => 'root',
             group   => 'root',
             content => template('autossh/autossh.service.erb'),
-            notify  => Service["autossh-${tun_name}"],
           }
         }
 
@@ -132,7 +124,6 @@ define autossh::tunnel(
             owner   => 'root',
             group   => 'root',
             content => template('autossh/autossh.service.erb'),
-            notify  => Service["autossh-${tun_name}"],
           }
         }
         default: {
@@ -152,13 +143,18 @@ define autossh::tunnel(
         owner   => 'root',
         group   => 'root',
         content => template('autossh/autossh.init.upstart.erb'),
-        notify  => Service["autossh-${tun_name}"],
       }
     }
 
     default: {
     } # default
   } # end case osfamily
+
+  service{"autossh-${tun_name}":
+    ensure  =>  $enable,
+    enable  =>  $enable,
+    require => Package['autossh']
+  }
 
   file{"autossh-${tun_name}_conf":
     ensure  => 'present',
@@ -167,7 +163,6 @@ define autossh::tunnel(
     owner   => $user,
     group   => $user,
     content => template('autossh/autossh.conf.erb'),
-    notify  => Service["autossh-${tun_name}"],
   }
 
   $endpoint_port = $tunnel_type ? {
