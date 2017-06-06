@@ -78,14 +78,10 @@ define autossh::tunnel(
 ){
   $tun_name     = $title
 
-  file{"autossh-${tun_name}_conf":
-    ensure  => 'present',
-    path    => "/etc/autossh/autossh-${tun_name}.conf",
-    mode    => '0660',
-    owner   => $user,
-    group   => $user,
-    content => template('autossh/autossh.conf.erb'),
-    notify  => Service["autossh-${tun_name}"],
+  service{"autossh-${tun_name}":
+    ensure  =>  $enable,
+    enable  =>  $enable,
+    require => Package['autossh']
   }
 
   #
@@ -142,7 +138,7 @@ define autossh::tunnel(
         default: {
         }
       }
-    }  
+    }
 
     /Debian/: {
       $tunnel_args  = $tunnel_type ? {
@@ -164,10 +160,14 @@ define autossh::tunnel(
     } # default
   } # end case osfamily
 
-  service{"autossh-${tun_name}":
-    ensure  =>  $enable,
-    enable  =>  $enable,
-    require => Package['autossh']
+  file{"autossh-${tun_name}_conf":
+    ensure  => 'present',
+    path    => "/etc/autossh/autossh-${tun_name}.conf",
+    mode    => '0660',
+    owner   => $user,
+    group   => $user,
+    content => template('autossh/autossh.conf.erb'),
+    notify  => Service["autossh-${tun_name}"],
   }
 
   $endpoint_port = $tunnel_type ? {
