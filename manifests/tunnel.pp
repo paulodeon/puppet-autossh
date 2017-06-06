@@ -78,6 +78,16 @@ define autossh::tunnel(
 ){
   $tun_name     = $title
 
+  file{"autossh-${tun_name}_conf":
+    ensure  => 'present',
+    path    => "/etc/autossh/autossh-${tun_name}.conf",
+    mode    => '0660',
+    owner   => $user,
+    group   => $user,
+    content => template('autossh/autossh.conf.erb'),
+    notify  => Service["autossh-${tun_name}"],
+  }
+
   #
   # User sysV or systemd init depending on the OS
   #
@@ -96,6 +106,7 @@ define autossh::tunnel(
             owner   => 'root',
             group   => 'root',
             content => template('autossh/autossh.init.sysv.erb'),
+            notify  => Service["autossh-${tun_name}"],
           }
         } # case rhel 5|6
 
@@ -107,6 +118,7 @@ define autossh::tunnel(
             owner   => 'root',
             group   => 'root',
             content => template('autossh/autossh.service.erb'),
+            notify  => Service["autossh-${tun_name}"],
           }
         }
 
@@ -124,25 +136,24 @@ define autossh::tunnel(
             owner   => 'root',
             group   => 'root',
             content => template('autossh/autossh.service.erb'),
+            notify  => Service["autossh-${tun_name}"],
           }
         }
         default: {
+          $tunnel_args  = $tunnel_type ? {
+            'reverse' => "-M ${monitor_port} -N -R",
+            'forward' => "-M ${monitor_port} -N -L"
+          }
+          file{ "autossh-${tun_name}-upstart":
+            ensure  => 'present',
+            path    => "/etc/init/autossh-${tun_name}.conf",
+            mode    => '0644',
+            owner   => 'root',
+            group   => 'root',
+            content => template('autossh/autossh.init.upstart.erb'),
+            notify  => Service["autossh-${tun_name}"],
+          }
         }
-      }
-    }
-
-    /Debian/: {
-      $tunnel_args  = $tunnel_type ? {
-        'reverse' => "-M ${monitor_port} -N -R",
-        'forward' => "-M ${monitor_port} -N -L"
-      }
-      file{ "autossh-${tun_name}-upstart":
-        ensure  => 'present',
-        path    => "/etc/init/autossh-${tun_name}.conf",
-        mode    => '0644',
-        owner   => 'root',
-        group   => 'root',
-        content => template('autossh/autossh.init.upstart.erb'),
       }
     }
 
@@ -154,15 +165,6 @@ define autossh::tunnel(
     ensure  =>  $enable,
     enable  =>  $enable,
     require => Package['autossh']
-  }
-
-  file{"autossh-${tun_name}_conf":
-    ensure  => 'present',
-    path    => "/etc/autossh/autossh-${tun_name}.conf",
-    mode    => '0660',
-    owner   => $user,
-    group   => $user,
-    content => template('autossh/autossh.conf.erb'),
   }
 
   $endpoint_port = $tunnel_type ? {
